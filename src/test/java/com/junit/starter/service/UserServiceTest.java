@@ -73,13 +73,16 @@ public class UserServiceTest extends TestBase  {
 
     @Test
     void throwExceptionIfDatabaseIsNotAvailable() {
+        //given when
         doThrow(RuntimeException.class).when(userDao).delete(IVAN.getId());
 
+        // then
         assertThrows(RuntimeException.class, () -> userService.delete(IVAN.getId()));
     }
 
     @Test
     void shouldDeleteExistedUser() {
+        // given
         userService.add(IVAN);
 //        Mockito.doReturn(true).when(userDao).delete(IVAN.getId());
 //        Mockito.doReturn(true).when(userDao).delete(Mockito.any());
@@ -88,10 +91,17 @@ public class UserServiceTest extends TestBase  {
 //                .thenReturn(true)
 //                .thenReturn(false);
 
+        // -> - ->
+//        BDDMockito.given(userDao.delete(IVAN.getId())).willReturn(true);
+        // <- - ->
+//        BDDMockito.willReturn(true).given(userDao).delete(IVAN.getId());
+
+        // when
         var deleteResult = userService.delete(IVAN.getId());
         System.out.println(userService.delete(IVAN.getId()));
         System.out.println(userService.delete(IVAN.getId()));
 
+        // then
 //        var argumentCaptor = ArgumentCaptor.forClass(Integer.class);
         verify(userDao, times(3)).delete(argumentCaptor.capture());
 
@@ -106,43 +116,51 @@ public class UserServiceTest extends TestBase  {
     @Order(1)
     @DisplayName("users will be empty if no user added")
     void usersEmptyIfNoUserAdded() throws IOException {
+        // given when
         if (true) {
             throw new RuntimeException();
         }
         System.out.println("Test 1: " + this);
         var users = userService.getAll();
 
-        // hamcrest
+        // then
+            // hamcrest
         MatcherAssert.assertThat(users, empty());
 
-        // assertj
+            // assertj
         assertTrue(users.isEmpty(), () -> "User list should be empty");
-        // input ->[box == func] -> actual output
+            // input ->[box == func] -> actual output
     }
 
     @Test
     @Order(2)
     void usersSizeIfUserAdded() {
+        // given
         System.out.println("Test 2: " + this);
         userService.add(IVAN);
         userService.add(PETR);
 
+        // when
         var users = userService.getAll();
 
+        // then
         assertThat(users).hasSize(2);
 //        assertEquals(2, users.size());
     }
 
     @Test
     void usersConvertedToMapById() {
+        // given
         userService.add(IVAN, PETR);
 
+        // when
         Map<Integer, User> users = userService.getAllConvertedById();
 
-        // hamcrest
+        // then
+            // hamcrest
         MatcherAssert.assertThat(users, IsMapContaining.hasKey(IVAN.getId()));
 
-        // assertj
+            // assertj
         assertAll(
                 () -> assertThat(users).containsKeys(IVAN.getId(), PETR.getId()),
                 () -> assertThat(users).containsValues(IVAN, PETR)
@@ -168,26 +186,35 @@ public class UserServiceTest extends TestBase  {
         @Test
         @Disabled("flaky, need to see")
         void loginFailIfPasswordIsNotCorrect() {
+            // given
             userService.add(IVAN);
 
+            // when
             var maybeUser = userService.login(IVAN.getUsername(), "dummy");
 
+            // then
             assertTrue(maybeUser.isEmpty());
         }
 
         @Test
         @RepeatedTest(value = 5, name = RepeatedTest.LONG_DISPLAY_NAME)
         void loginFailIfUserDoesNotExist() {
+            // given
             userService.add(IVAN);
 
+            // when
             var maybeUser = userService.login("dummy", IVAN.getPassword());
 
+            // then
             assertTrue(maybeUser.isEmpty());
         }
 
         @Test
         void checkLoginFunctionalityPerformance() {
+            // given
             System.out.println(Thread.currentThread().getName());
+
+            // when then
             var result = assertTimeoutPreemptively(Duration.ofMillis(200L), () -> {
                 System.out.println(Thread.currentThread().getName());
                 Thread.sleep(100L);
@@ -198,9 +225,14 @@ public class UserServiceTest extends TestBase  {
 
         @Test
         void loginSuccessIfUserExists() {
+            // given
             userService.add(IVAN);
+
+            // when
             Optional<User> maybeUser = userService.login(IVAN.getUsername(), IVAN.getPassword());
-            // assertj
+
+            // then
+                // assertj
             assertThat(maybeUser).isPresent();
             maybeUser.ifPresent(user -> assertThat(user).isEqualTo(IVAN));
 
@@ -211,6 +243,7 @@ public class UserServiceTest extends TestBase  {
 
         @Test
         void throwExceptionIfUsernameOrPasswordIsNull() {
+            // given when then
             assertAll(
                     () -> {
                         var exception = assertThrows(IllegalArgumentException.class, () -> userService.login(null, "dummy"));
@@ -237,9 +270,13 @@ public class UserServiceTest extends TestBase  {
 //        })
         @DisplayName("login param test")
         void loginParameterizedTest(String username, String password, Optional<User> user) {
+            // given
             userService.add(IVAN, PETR);
 
+            // when
             var maybeUser = userService.login(username, password);
+
+            // then
             assertThat(maybeUser).isEqualTo(user);
         }
     }
